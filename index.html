@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>TXTCAST LIVE</title>
+  <title>hTXTCAST LIVE</title>
   <script src="https://unpkg.com/@solana/web3.js@1.75.1/lib/index.iife.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
   <style>
@@ -17,7 +17,7 @@
 </head>
 <body>
   <div class="wrapper">
-    <h1>📡 TXTCAST LIVE</h1>
+    <h1>📡 TXTCAST Viewer</h1>
     <div class="memo-box" id="memoDisplay">Initializing...<span class="cursor"></span></div>
     <div class="status" id="status">Connecting to Solana...</div>
   </div>
@@ -29,8 +29,6 @@
 
     const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl('mainnet-beta'));
     const walletAddress = new solanaWeb3.PublicKey("9Er7ydwgEXhun5L2mHmmcjBP5qUxLYFF44PuQttNo2Sx");
-
-    let lastMemoSet = new Set();
 
     async function fetchTXTCASTMemos() {
       const limit = 100;
@@ -52,29 +50,16 @@
             const tx = await connection.getTransaction(sig.signature, { commitment: "confirmed" });
             if (!tx?.transaction?.message) continue;
 
-            const instructions = tx.transaction.message.instructions || [];
+            const allInstructions = [
+              ...(tx.transaction.message.instructions || []),
+              ...((tx.meta?.innerInstructions || []).flatMap(i => i.instructions) || [])
+            ];
 
-            for (let ix of instructions) {
-              const programId = ix.programId.toBase58?.() || "";
-              if (programId === "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr") {
-                const memoData = atob(ix.data || "");
-                if (/^TX?TT?CAST/i.test(memoData) && !seen.has(memoData)) {
-                  memos.push(memoData.trim());
-                  seen.add(memoData.trim());
-                }
-              }
-            }
-
-            const inner = tx.meta?.innerInstructions || [];
-            for (let innerIxGroup of inner) {
-              for (let ix of innerIxGroup.instructions) {
-                if (ix.programId === "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr") {
-                  const memoData = atob(ix.data || "");
-                  if (/^TX?TT?CAST/i.test(memoData) && !seen.has(memoData)) {
-                    memos.push(memoData.trim());
-                    seen.add(memoData.trim());
-                  }
-                }
+            for (let ix of allInstructions) {
+              const data = ix.data ? atob(ix.data) : "";
+              if (/^TXTCAST/.test(data) && !seen.has(data)) {
+                memos.push(data.trim());
+                seen.add(data.trim());
               }
             }
           }
@@ -91,8 +76,8 @@
       status.textContent = "🔄 Loading TXTCAST memos...";
       const memos = await fetchTXTCASTMemos();
       if (!memos.length) {
-        display.innerHTML = "No new TXTCAST memos.<span class='cursor'></span>";
-        status.textContent = "✅ Connected — No new TXTCAST memos yet.";
+        display.innerHTML = "No TXTCAST memos found.<span class='cursor'></span>";
+        status.textContent = "✅ Connected — No hTXTCAST memos yet.";
         return;
       }
 
@@ -121,19 +106,6 @@
 
     displayMemos();
     setInterval(displayMemos, 90000);
-
-    // 🚨 FORCE LOAD ONE KNOWN MEMO (for demo fallback)
-    const testTx = "3qgqKLG3oKvXXVuCqKn7oVceArnX9aAdb3N1dAdLxBcEdiDbXZEVzQi3yMyhyNLtAZSZYLhLn3YAHQejSMBgsK7Y";
-    connection.getTransaction(testTx, { commitment: "confirmed" }).then(tx => {
-      const instructions = tx?.transaction?.message?.instructions || [];
-      for (let ix of instructions) {
-        if (ix.programId.toBase58() === "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr") {
-          const memoData = atob(ix.data || "");
-          display.innerText = "🚨 Found from known TX:\n\n" + memoData;
-          status.textContent = "✅ Loaded from known transaction (demo mode).";
-        }
-      }
-    });
   </script>
 </body>
 </html>
