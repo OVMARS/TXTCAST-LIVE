@@ -2,11 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>📡 TXTCAST Viewer</title>
+  <title>hTXTCAST LIVE</title>
   <script src="https://unpkg.com/@solana/web3.js@1.75.1/lib/index.iife.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
   <style>
-    body { background: #000; margin: 0; padding: 0; font-family: 'Fira Code', monospace; color: #0f0; }
+    body { background: #000; margin: 0; padding: 0; font-family: 'Fira Code', monospace; color: #0f0; page++;
+      if (signatures.length < limit) break;
+    }
     .wrapper { max-width: 800px; margin: 3em auto; background: #111; padding: 2em; border-radius: 12px; box-shadow: 0 0 20px #0f03; }
     h1 { font-size: 1.8em; color: #fff; text-align: center; margin-bottom: 1em; }
     .memo-box { background: #000; padding: 1em; border-radius: 8px; border: 1px solid #333; height: 260px; overflow-y: auto; font-size: 14px; white-space: pre-wrap; line-height: 1.4; }
@@ -26,6 +28,7 @@
     const display = document.getElementById('memoDisplay');
     const status = document.getElementById('status');
     const cursor = document.querySelector('.cursor');
+
     const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl('mainnet-beta'));
     const walletAddress = new solanaWeb3.PublicKey("9Er7ydwgEXhun5L2mHmmcjBP5qUxLYFF44PuQttNo2Sx");
 
@@ -34,12 +37,18 @@
       let beforeSig = null;
       const memos = [];
       const seen = new Set();
+
       try {
-        while (true) {
+        
+    let page = 0;
+    while (true) {
+    
           const options = { limit };
           if (beforeSig) options.before = beforeSig;
+
           const signatures = await connection.getSignaturesForAddress(walletAddress, options);
           if (!signatures.length) break;
+
           beforeSig = signatures[signatures.length - 1].signature;
 
           for (let sig of signatures) {
@@ -52,23 +61,35 @@
             ];
 
             for (let ix of allInstructions) {
-              let data = "";
-              try {
-                data = ix.data ? atob(ix.data) : "";
-              } catch (e) {
-                try {
-                  data = new TextDecoder().decode(new Uint8Array(ix.data));
-                } catch (_) {}
-              }
-
+              
+    
+    let data = "";
+    if (ix.parsed && ix.parsed.type === "memo") {
+      data = ix.parsed.info.memo || "";
+    } else {
+      try {
+        data = ix.data ? atob(ix.data) : "";
+      } catch (e) {
+        try {
+          data = new TextDecoder().decode(new Uint8Array(ix.data));
+        } catch (_) {}
+      }
+    }
+    
+    try {
+      data = ix.data ? atob(ix.data) : "";
+    } catch (e) {
+      try { data = new TextDecoder().decode(new Uint8Array(ix.data)); } catch (_) {}
+    }
+    
               if (/^TXTCAST/.test(data) && !seen.has(data)) {
                 memos.push(data.trim());
                 seen.add(data.trim());
               }
             }
           }
-          if (signatures.length < limit) break;
         }
+
         return memos.reverse();
       } catch (err) {
         status.textContent = `❌ Error fetching memos: ${err}`;
@@ -81,7 +102,7 @@
       const memos = await fetchTXTCASTMemos();
       if (!memos.length) {
         display.innerHTML = "No TXTCAST memos found.<span class='cursor'></span>";
-        status.textContent = "✅ Connected — No TXTCAST memos yet.";
+        status.textContent = "✅ Connected — No hTXTCAST memos yet.";
         return;
       }
 
