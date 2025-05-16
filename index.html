@@ -33,28 +33,56 @@
     let lastMemoSet = new Set();
 
     async function fetchTXTCASTMemos() {
+      const limit = 100;
+      let beforeSig = null;
+      const memos = [];
+      const seen = new Set();
+
       try {
-        const signatures = await connection.getSignaturesForAddress(walletAddress, { limit: 100 });
-        const memos = [];
+        for (let page = 0; page < 5; page++) {
+          const options = { limit };
+          if (beforeSig) options.before = beforeSig;
 
-        for (let sig of signatures) {
-          const tx = await connection.getTransaction(sig.signature, { commitment: "confirmed" });
-          if (!tx || !tx.transaction?.message) continue;
+          const signatures = await connection.getSignaturesForAddress(walletAddress, options);
+          if (!signatures.length) break;
 
-          for (let ix of tx.transaction.message.instructions) {
-            if (ix.programId.toBase58() === "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr") {
-              const memoData = atob(ix.data);
-              if (memoData.startsWith("TXTCAST") && !lastMemoSet.has(memoData)) {
-                memos.push(memoData.trim());
-                lastMemoSet.add(memoData.trim());
+          beforeSig = signatures[signatures.length - 1].signature;
+
+          for (let sig of signatures) {
+            const tx = await connection.getTransaction(sig.signature, { commitment: "confirmed" });
+            if (!tx?.transaction?.message) continue;
+
+            const instructions = tx.transaction.message.instructions || [];
+
+            for (let ix of instructions) {
+              const programId = ix.programId.toBase58?.() || "";
+              if (programId === "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr") {
+                const memoData = atob(ix.data || "");
+                if (/^TX?TT?CAST/i.test(memoData) && !seen.has(memoData)) {
+                  memos.push(memoData.trim());
+                  seen.add(memoData.trim());
+                }
+              }
+            }
+
+            const inner = tx.meta?.innerInstructions || [];
+            for (let innerIxGroup of inner) {
+              for (let ix of innerIxGroup.instructions) {
+                if (ix.programId === "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr") {
+                  const memoData = atob(ix.data || "");
+                  if (/^TX?TT?CAST/i.test(memoData) && !seen.has(memoData)) {
+                    memos.push(memoData.trim());
+                    seen.add(memoData.trim());
+                  }
+                }
               }
             }
           }
         }
 
         return memos.reverse();
-      } catch (error) {
-        status.textContent = `❌ Error fetching memos: ${error}`;
+      } catch (err) {
+        status.textContent = `❌ Error fetching memos: ${err}`;
         return [];
       }
     }
@@ -69,7 +97,7 @@
       }
 
       let index = 0;
-      status.textContent = `✅ Showing ${memos.length} new TXTCAST memo(s).`;
+      status.textContent = `✅ Showing ${memos.length} TXTCAST memo(s).`;
 
       async function typeMemo(text) {
         display.innerHTML = "";
