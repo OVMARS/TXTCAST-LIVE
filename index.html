@@ -56,7 +56,14 @@
             ];
 
             for (let ix of allInstructions) {
-              const data = ix.data ? atob(ix.data) : "";
+              
+    let data = "";
+    try {
+      data = ix.data ? atob(ix.data) : "";
+    } catch (e) {
+      try { data = new TextDecoder().decode(new Uint8Array(ix.data)); } catch (_) {}
+    }
+    
               if (/^TXTCAST/.test(data) && !seen.has(data)) {
                 memos.push(data.trim());
                 seen.add(data.trim());
