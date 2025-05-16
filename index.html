@@ -39,7 +39,7 @@
       const seen = new Set();
 
       try {
-        for (let page = 0; page < 5; page++) {
+        for (let page = 0; page < 3; page++) {
           const options = { limit };
           if (beforeSig) options.before = beforeSig;
 
@@ -120,7 +120,20 @@
     }
 
     displayMemos();
-    setInterval(displayMemos, 90000); // Refresh every 90s
+    setInterval(displayMemos, 90000);
+
+    // 🚨 FORCE LOAD ONE KNOWN MEMO (for demo fallback)
+    const testTx = "3qgqKLG3oKvXXVuCqKn7oVceArnX9aAdb3N1dAdLxBcEdiDbXZEVzQi3yMyhyNLtAZSZYLhLn3YAHQejSMBgsK7Y";
+    connection.getTransaction(testTx, { commitment: "confirmed" }).then(tx => {
+      const instructions = tx?.transaction?.message?.instructions || [];
+      for (let ix of instructions) {
+        if (ix.programId.toBase58() === "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr") {
+          const memoData = atob(ix.data || "");
+          display.innerText = "🚨 Found from known TX:\n\n" + memoData;
+          status.textContent = "✅ Loaded from known transaction (demo mode).";
+        }
+      }
+    });
   </script>
 </body>
 </html>
