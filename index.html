@@ -30,6 +30,8 @@
     const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl('mainnet-beta'));
     const walletAddress = new solanaWeb3.PublicKey("9Er7ydwgEXhun5L2mHmmcjBP5qUxLYFF44PuQttNo2Sx");
 
+    let lastMemoSet = new Set();
+
     async function fetchTXTCASTMemos() {
       try {
         const signatures = await connection.getSignaturesForAddress(walletAddress, { limit: 100 });
@@ -37,15 +39,14 @@
 
         for (let sig of signatures) {
           const tx = await connection.getTransaction(sig.signature, { commitment: "confirmed" });
-          if (tx && tx.transaction && tx.transaction.message) {
-            const instructions = tx.transaction.message.instructions;
-            for (let ix of instructions) {
-              const programId = ix.programId.toBase58();
-              if (programId === "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr") {
-                const memoData = atob(ix.data);
-                if (/TXTCAST/i.test(memoData)) {
-                  memos.push(memoData.trim());
-                }
+          if (!tx || !tx.transaction?.message) continue;
+
+          for (let ix of tx.transaction.message.instructions) {
+            if (ix.programId.toBase58() === "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr") {
+              const memoData = atob(ix.data);
+              if (memoData.startsWith("TXTCAST") && !lastMemoSet.has(memoData)) {
+                memos.push(memoData.trim());
+                lastMemoSet.add(memoData.trim());
               }
             }
           }
@@ -59,29 +60,29 @@
     }
 
     async function displayMemos() {
-      status.textContent = "Loading TXTCAST memos...";
+      status.textContent = "🔄 Loading TXTCAST memos...";
       const memos = await fetchTXTCASTMemos();
       if (!memos.length) {
-        display.innerHTML = "No TXTCAST memos found.<span class='cursor'></span>";
-        status.textContent = "✅ Connected — No TXTCAST memos yet.";
+        display.innerHTML = "No new TXTCAST memos.<span class='cursor'></span>";
+        status.textContent = "✅ Connected — No new TXTCAST memos yet.";
         return;
       }
 
       let index = 0;
-      status.textContent = `✅ Showing ${memos.length} TXTCAST memos.`;
+      status.textContent = `✅ Showing ${memos.length} new TXTCAST memo(s).`;
 
       async function typeMemo(text) {
         display.innerHTML = "";
         for (let i = 0; i < text.length; i++) {
           display.innerHTML += text[i];
           display.appendChild(cursor);
-          await new Promise(r => setTimeout(r, 30));
+          await new Promise(r => setTimeout(r, 25));
         }
       }
 
       async function loop() {
-        while (true) {
-          await typeMemo(memos[index % memos.length]);
+        while (index < memos.length) {
+          await typeMemo(memos[index]);
           await new Promise(r => setTimeout(r, 5000));
           index++;
         }
@@ -91,7 +92,7 @@
     }
 
     displayMemos();
-    setInterval(displayMemos, 120000);
+    setInterval(displayMemos, 90000); // Refresh every 90s
   </script>
 </body>
 </html>
