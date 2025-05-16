@@ -35,7 +35,6 @@
       const memos = [];
       const seen = new Set();
       try {
-        let page = 0;
         while (true) {
           const options = { limit };
           if (beforeSig) options.before = beforeSig;
@@ -68,7 +67,6 @@
               }
             }
           }
-          page++;
           if (signatures.length < limit) break;
         }
         return memos.reverse();
