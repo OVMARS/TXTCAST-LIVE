@@ -19,7 +19,7 @@
   <div class="wrapper">
     <h1>📡 TXTCAST Viewer</h1>
     <div class="memo-box" id="memoDisplay">Initializing...<span class="cursor"></span></div>
-    <div class="status" id="status">Connecting to Solana...</div>
+    <div class="status" id="status">Connecting to Solana (Helius Devnet)...</div>
   </div>
 
   <script>
@@ -27,9 +27,9 @@
     const status = document.getElementById('status');
     const cursor = document.querySelector('.cursor');
 
-    // Use custom Syndica RPC WebSocket endpoint:
+    // Updated: Use Helius Devnet WebSocket endpoint
     const connection = new solanaWeb3.Connection(
-      "wss://solana-mainnet.api.syndica.io/api-key/4fRsA1YRvSoRL4iDmhgKn2KYJCSSKBPC3yWmB7BGtiZFaBdoJUyi52tcHTQGRNdsSAJiYVmf81JYcmzN1j14BkqLJg4vuCJSzH7",
+      "wss://devnet.helius-rpc.com/?api-key=34ea16bb-80b2-4e57-ad72-e94ecda7028a",
       "confirmed"
     );
 
