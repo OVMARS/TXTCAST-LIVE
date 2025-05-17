@@ -21,38 +21,36 @@ A Solana-powered live memo reader that streams all `TXTCAST` memos from a public
 Want to expand this with a backend, search, or tweet parsing? PRs are welcome.
 
 
-PITCH DECK 
-https://www.canva.com/design/DAGnqptMmG8/LiEXgPWp7ePVWuxYu9Z3rg/view?utm_content=DAGnqptMmG8&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=hbf40301307
+📄 Pitch Deck
+Canva Pitch Deck
 
-Pitch Video 
-https://www.youtube.com/watch?v=yLZMd_d85is
+🎥 Submission Videos
+Pitch Video
 
-Tech - Walkthrough 
-https://www.youtube.com/watch?v=iiiNONxOqQo
+Technical Walkthrough
 
-white promo : https://x.com/White4Everyone/status/1922822163813499285 
+🧾 TXTCAST Transactions
+TXTCAST000
 
-TXTCAST REVEAL FOR HACKATHON  : https://x.com/White4Everyone/status/1923657251413180876
+TXTCAST001
 
-TXTCAST  ANNOUNCEMENT : https://x.com/White4Everyone/status/1917997249746948524
+🔧 Hackathon Submission Transactions
+Submission TX 1
 
-✅ Past TXTCAST Transactions
+Submission TX 2
 
-TXTCAST000:
-🔗 https://solscan.io/tx/4ihrUYY7FEpjwH8552nCMSeqiSMN8uBXxUtnT9ecEgp3epkQMjs75rx2nZvjP37YUDcdAsdQ8AZNbgUcJqDmgZfR
+🪙 $WHITE Token
+Pump.Fun Listing
 
-TXTCAST001:
-🔗 https://solscan.io/tx/3qgqKLG3oKvXXVuCqKn7oVceArnX9aAdb3N1dAdLxBcEdiDbXZEVzQi3yMyhyNLtAZSZYLhLn3YAHQejSMBgsK7Y
+📢 Social Media Announcements
+WHITE Promo
 
-🔧 Hackathon Submission TXs
-🔗 https://solscan.io/tx/2Nq1C5RxZuxrA3ewtkk4u71fdyUXZzPK8VxmbcH2if4S33f4Hqi7p42HuDBMWZChR1qDpPaNLvr6xtz2YYHYguVR
+TXTCAST Reveal for Hackathon
 
-🔗 https://solscan.io/tx/5M8Zh13DzXomoq6myno4BdqRDhmUjYosBqXSeJPyrcWEez96NbJ915nyMbXU9SAPQ3ZbFeMwort5XsQANSXkWEE
+TXTCAST Announcement
 
-🧪 Pump.Fun Coin
-🔗 https://pump.fun/coin/83nx6VvCj8Yc1ZHNEnUsoRhfphiKj83KFRoN9USXpump?include-nsfw=true
+Celebrity Follow: John Cena
 
-Celeb Follow : John Cena :  https://x.com/White4Everyone/status/1919270642119020967
----
+
 
 Made for ✨ Hackathon with 💚 by [OVMARS](https://github.com/OVMARS)
