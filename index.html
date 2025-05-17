@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>TXTCAST FEED</title>
+  <title>📡 TXTCAST Viewer</title>
   <script src="https://unpkg.com/@solana/web3.js@1.75.1/lib/index.iife.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
   <style>
@@ -28,7 +28,7 @@
     const cursor = document.querySelector('.cursor');
 
     const connection = new solanaWeb3.Connection(
-      "https://dimensional-proportionate-putty.solana-mainnet.quiknode.pro/1e853ad422e2c4e07002dfc2660db766d641b56f/",
+      solanaWeb3.clusterApiUrl("mainnet-beta"),
       "confirmed"
     );
 
