@@ -17,9 +17,9 @@
 </head>
 <body>
   <div class="wrapper">
-    <h1>📡 TXTCAST Live Feed</h1>
+    <h1>📡 TXTCAST Viewer</h1>
     <div class="memo-box" id="memoDisplay">Initializing...<span class="cursor"></span></div>
-    <div class="status" id="status">Connecting to Solana...</div>
+    <div class="status" id="status">Connecting to Solana RPC...</div>
   </div>
 
   <script>
@@ -88,7 +88,9 @@
 
     async function displayMemos() {
       status.textContent = "🔄 Loading TXTCAST memos...";
+      display.innerHTML = "⌛ Loading memos...<span class='cursor'></span>";
       const memos = await fetchTXTCASTMemos();
+
       if (!memos.length) {
         display.innerHTML = "No TXTCAST memos found.<span class='cursor'></span>";
         status.textContent = "✅ Connected — No memos yet.";
@@ -119,7 +121,7 @@
     }
 
     displayMemos();
-    setInterval(displayMemos, 120000); // auto-refresh every 2 min
+    setInterval(displayMemos, 120000);
   </script>
 </body>
 </html>
