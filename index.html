@@ -1,125 +1,105 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>TXTCAST FEED</title>
-  <script src="https://unpkg.com/@solana/web3.js@1.75.1/lib/index.iife.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
-  <style>
-    body { background: #000; margin: 0; padding: 0; font-family: 'Fira Code', monospace; color: #0f0; }
-    .wrapper { max-width: 800px; margin: 3em auto; background: #111; padding: 2em; border-radius: 12px; box-shadow: 0 0 20px #0f03; }
-    h1 { font-size: 1.8em; color: #fff; text-align: center; margin-bottom: 1em; }
-    .memo-box { background: #000; padding: 1em; border-radius: 8px; border: 1px solid #333; height: 260px; overflow-y: auto; font-size: 14px; white-space: pre-wrap; line-height: 1.4; }
-    .cursor { display: inline-block; width: 6px; animation: blink 0.8s infinite; background: #0f0; height: 1em; vertical-align: bottom; }
-    @keyframes blink { 50% { opacity: 0; } }
-    .status { color: #888; font-size: 12px; margin-top: 1em; text-align: center; }
-  </style>
-</head>
-<body>
-  <div class="wrapper">
-    <h1>📡 TXTCAST Viewer</h1>
-    <div class="memo-box" id="memoDisplay">Initializing...<span class="cursor"></span></div>
-    <div class="status" id="status">Connecting to Solana...</div>
-  </div>
+<script>
+  const display = document.getElementById('memoDisplay');
+  const status = document.getElementById('status');
+  const cursor = document.querySelector('.cursor');
+  let isFetching = false; // prevent overlapping fetches
 
-  <script>
-    const display = document.getElementById('memoDisplay');
-    const status = document.getElementById('status');
-    const cursor = document.querySelector('.cursor');
+  const connection = new solanaWeb3.Connection(
+    solanaWeb3.clusterApiUrl("mainnet-beta"),
+    "confirmed"
+  );
 
-    const connection = new solanaWeb3.Connection(
-      solanaWeb3.clusterApiUrl("mainnet-beta"),
-      "confirmed"
-    );
+  const walletAddress = new solanaWeb3.PublicKey("9Er7ydwgEXhun5L2mHmmcjBP5qUxLYFF44PuQttNo2Sx");
 
-    const walletAddress = new solanaWeb3.PublicKey("9Er7ydwgEXhun5L2mHmmcjBP5qUxLYFF44PuQttNo2Sx");
+  async function fetchTXTCASTMemos() {
+    const limit = 100;
+    let beforeSig = null;
+    const memos = [];
+    const seen = new Set();
+    try {
+      while (true) {
+        const options = { limit };
+        if (beforeSig) options.before = beforeSig;
+        const signatures = await connection.getSignaturesForAddress(walletAddress, options);
+        if (!signatures.length) break;
+        beforeSig = signatures[signatures.length - 1].signature;
 
-    async function fetchTXTCASTMemos() {
-      const limit = 100;
-      let beforeSig = null;
-      const memos = [];
-      const seen = new Set();
-      try {
-        while (true) {
-          const options = { limit };
-          if (beforeSig) options.before = beforeSig;
-          const signatures = await connection.getSignaturesForAddress(walletAddress, options);
-          if (!signatures.length) break;
-          beforeSig = signatures[signatures.length - 1].signature;
+        for (let sig of signatures) {
+          const tx = await connection.getParsedTransaction(sig.signature, { commitment: "confirmed" });
+          if (!tx?.transaction?.message) continue;
 
-          for (let sig of signatures) {
-            const tx = await connection.getParsedTransaction(sig.signature, { commitment: "confirmed" });
-            if (!tx?.transaction?.message) continue;
+          const allInstructions = [
+            ...(tx.transaction.message.instructions || []),
+            ...((tx.meta?.innerInstructions || []).flatMap(i => i.instructions) || [])
+          ];
 
-            const allInstructions = [
-              ...(tx.transaction.message.instructions || []),
-              ...((tx.meta?.innerInstructions || []).flatMap(i => i.instructions) || [])
-            ];
-
-            for (let ix of allInstructions) {
-              let data = "";
-              if (ix.parsed && ix.parsed.type === "memo") {
-                data = ix.parsed.info.memo || "";
-              } else {
+          for (let ix of allInstructions) {
+            let data = "";
+            if (ix.parsed && ix.parsed.type === "memo") {
+              data = ix.parsed.info.memo || "";
+            } else {
+              try {
+                data = ix.data ? atob(ix.data) : "";
+              } catch (e) {
                 try {
-                  data = ix.data ? atob(ix.data) : "";
-                } catch (e) {
-                  try {
-                    data = new TextDecoder().decode(new Uint8Array(ix.data));
-                  } catch (_) {}
-                }
-              }
-
-              if (/^TXTCAST/.test(data) && !seen.has(data)) {
-                memos.push(data.trim());
-                seen.add(data.trim());
+                  data = new TextDecoder().decode(new Uint8Array(ix.data));
+                } catch (_) {}
               }
             }
+
+            if (/^TXTCAST/.test(data) && !seen.has(data)) {
+              memos.push(data.trim());
+              seen.add(data.trim());
+            }
           }
-
-          if (signatures.length < limit) break;
         }
-        return memos.reverse();
-      } catch (err) {
-        status.textContent = `❌ Error fetching memos: ${err}`;
-        return [];
+
+        if (signatures.length < limit) break;
+      }
+      console.log("Fetched memos:", memos); // for debugging
+      return memos.reverse();
+    } catch (err) {
+      status.textContent = `❌ Error fetching memos: ${err}`;
+      return [];
+    }
+  }
+
+  async function displayMemos() {
+    if (isFetching) return; // Prevent overlap
+    isFetching = true;
+    status.textContent = "🔄 Loading TXTCAST memos...";
+    const memos = await fetchTXTCASTMemos();
+    if (!memos.length) {
+      display.innerHTML = "No TXTCAST memos found.<span class='cursor'></span>";
+      status.textContent = "✅ Connected — No TXTCAST memos yet.";
+      isFetching = false;
+      return;
+    }
+
+    let index = 0;
+    status.textContent = `✅ Showing ${memos.length} TXTCAST memo(s).`;
+
+    async function typeMemo(text) {
+      display.innerHTML = ""; // Clear previous text
+      for (let i = 0; i < text.length; i++) {
+        display.innerHTML += text[i];
+        display.appendChild(cursor);
+        await new Promise(r => setTimeout(r, 25));
       }
     }
 
-    async function displayMemos() {
-      status.textContent = "🔄 Loading TXTCAST memos...";
-      const memos = await fetchTXTCASTMemos();
-      if (!memos.length) {
-        display.innerHTML = "No TXTCAST memos found.<span class='cursor'></span>";
-        status.textContent = "✅ Connected — No TXTCAST memos yet.";
-        return;
+    async function loop() {
+      while (index < memos.length) {
+        await typeMemo(memos[index]);
+        await new Promise(r => setTimeout(r, 5000));
+        index++;
       }
-
-      let index = 0;
-      status.textContent = `✅ Showing ${memos.length} TXTCAST memo(s).`;
-
-      async function typeMemo(text) {
-        display.innerHTML = "";
-        for (let i = 0; i < text.length; i++) {
-          display.innerHTML += text[i];
-          display.appendChild(cursor);
-          await new Promise(r => setTimeout(r, 25));
-        }
-      }
-
-      async function loop() {
-        while (index < memos.length) {
-          await typeMemo(memos[index]);
-          await new Promise(r => setTimeout(r, 5000));
-          index++;
-        }
-      }
-
-      loop();
+      isFetching = false; // Mark fetch complete after loop
     }
 
-    displayMemos();
-    setInterval(displayMemos, 90000);
-  </script>
-</body>
-</html>
+    loop();
+  }
+
+  displayMemos();
+  setInterval(displayMemos, 90000);
+</script>
