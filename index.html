@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title> TXTCAST FEED</title>
+  <title>📡 TXTCAST Viewer</title>
   <script src="https://unpkg.com/@solana/web3.js@1.75.1/lib/index.iife.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
   <style>
@@ -17,29 +17,33 @@
 </head>
 <body>
   <div class="wrapper">
-    <h1>📡 TXTCAST Viewer</h1>
+    <h1>📡 TXTCAST Live Feed</h1>
     <div class="memo-box" id="memoDisplay">Initializing...<span class="cursor"></span></div>
-    <div class="status" id="status">Connecting to Solana (Helius Devnet)...</div>
+    <div class="status" id="status">Connecting to Solana...</div>
   </div>
 
   <script>
+    const RPC_URLS = [
+      "https://mainnet.helius-rpc.com/?api-key=34ea16bb-80b2-4e57-ad72-e94ecda7028a",
+      "https://solana-mainnet.api.syndica.io/api-key/4fRsA1YRvSoRL4iDmhgKn2KYJCSSKBPC3yWmB7BGtiZFaBdoJUyi52tcHTQGRNdsSAJiVYmf81JYcmzNj14BkqLJg4vucJSzH7",
+      "https://api.mainnet-beta.solana.com"
+    ];
+
+    let rpcIndex = 0;
+    const getConnection = () => new solanaWeb3.Connection(RPC_URLS[rpcIndex], "confirmed");
+
+    const walletAddress = new solanaWeb3.PublicKey("9Er7ydwgEXhun5L2mHmmcjBP5qUxLYFF44PuQttNo2Sx");
     const display = document.getElementById('memoDisplay');
     const status = document.getElementById('status');
     const cursor = document.querySelector('.cursor');
-
-    // Updated: Use Helius Devnet WebSocket endpoint
-    const connection = new solanaWeb3.Connection(
-      "wss://devnet.helius-rpc.com/?api-key=34ea16bb-80b2-4e57-ad72-e94ecda7028a",
-      "confirmed"
-    );
-
-    const walletAddress = new solanaWeb3.PublicKey("9Er7ydwgEXhun5L2mHmmcjBP5qUxLYFF44PuQttNo2Sx");
 
     async function fetchTXTCASTMemos() {
       const limit = 100;
       let beforeSig = null;
       const memos = [];
       const seen = new Set();
+      const connection = getConnection();
+
       try {
         while (true) {
           const options = { limit };
@@ -62,15 +66,8 @@
               if (ix.parsed && ix.parsed.type === "memo") {
                 data = ix.parsed.info.memo || "";
               } else {
-                try {
-                  data = ix.data ? atob(ix.data) : "";
-                } catch (e) {
-                  try {
-                    data = new TextDecoder().decode(new Uint8Array(ix.data));
-                  } catch (_) {}
-                }
+                try { data = ix.data ? atob(ix.data) : ""; } catch (_) {}
               }
-
               if (/^TXTCAST/.test(data) && !seen.has(data)) {
                 memos.push(data.trim());
                 seen.add(data.trim());
@@ -80,10 +77,12 @@
 
           if (signatures.length < limit) break;
         }
+
         return memos.reverse();
       } catch (err) {
-        status.textContent = `❌ Error fetching memos: ${err}`;
-        return [];
+        console.warn(`RPC error: ${RPC_URLS[rpcIndex]}`);
+        rpcIndex = (rpcIndex + 1) % RPC_URLS.length;
+        return fetchTXTCASTMemos(); // try next RPC
       }
     }
 
@@ -92,7 +91,7 @@
       const memos = await fetchTXTCASTMemos();
       if (!memos.length) {
         display.innerHTML = "No TXTCAST memos found.<span class='cursor'></span>";
-        status.textContent = "✅ Connected — No TXTCAST memos yet.";
+        status.textContent = "✅ Connected — No memos yet.";
         return;
       }
 
@@ -120,7 +119,7 @@
     }
 
     displayMemos();
-    setInterval(displayMemos, 90000);
+    setInterval(displayMemos, 120000); // auto-refresh every 2 min
   </script>
 </body>
 </html>
