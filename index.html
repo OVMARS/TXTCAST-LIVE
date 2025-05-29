@@ -21,7 +21,7 @@
         position: absolute;
         bottom: -5px; /* Sit just below the memo-box */
         left: 0;
-        height: 4px; /* THICKER loading bar */
+        height: 6px; /* THICKER loading bar */
         background-color: #0f0; /* Green loading bar */
         width: 0%;
         box-shadow: 0 0 10px #0f0, 0 0 5px #0f0 inset; /* Inner and outer glow */
@@ -44,7 +44,7 @@
     .memo-content {}
     .transaction-link { display: block; font-size: 0.75em; color: #0c0; text-decoration: none; margin-top: 10px; word-break: break-all; opacity: 0.8; }
     .transaction-link:hover { color: #0f0; text-decoration: underline; opacity: 1;}
-    .cursor { display: inline-block; width: 6px; animation: blink 0.7s infinite; background: #0f0; height: 1em; vertical-align: baseline; margin-left: 2px; box-shadow: 0 0 2px #0f0, 0 0 4px #0f0;} /* Reduced glow */
+    .cursor { display: inline-block; width: 7px; animation: blink 0.7s infinite; background: #0f0; height: 1em; vertical-align: baseline; margin-left: 2px; box-shadow: 0 0 20px #0f0, 0 0 20px #0f0;} /* Reduced glow */
     @keyframes blink { 50% { opacity: 0; } }
     .status { color: #ccc; font-size: 12px; margin-top: 1em; text-align: center; } /* Lighter grey for status */
     .controls { text-align: center; margin-top: 1.5em; }
@@ -80,20 +80,20 @@
         align-items: center;
     }
     .bottom-logo-container img {
-        width: 30px;
-        height: 30px;
-        border-radius: 3px;
+        width: 50px;
+        height: 50px;
+        border-radius: 10px;
         opacity: 1; /* Opacity 100% */
         transition: transform 0.2s, box-shadow 0.2s;
     }
     .bottom-logo-container img:hover {
         transform: scale(1.1);
-        box-shadow: 0 0 10px #0f0; /* Glow on hover */
+        box-shadow: 0 0 10px #fff; /* Glow on hover */
     }
     .powered-by-label {
-        font-size: 10px;
-        color: #aaa; /* Subdued color */
-        margin-left: 8px;
+        font-size: 8px;
+        color: #fff; /* Subdued color */
+        margin-left: 10px;
         text-decoration: none;
     }
     .powered-by-label:hover {
@@ -143,7 +143,7 @@
     const DELAY_BETWEEN_BATCHES_MS = 120;  // Slightly reduced delay between batches
 
     // --- Typewriter & Sound ---
-    let TYPING_SPEED_MS = 35; // Faster typewriter speed
+    let TYPING_SPEED_MS = 20; // Faster typewriter speed
 
     // --- Audio Element ---
     let blipAudioElement;
@@ -166,7 +166,7 @@
 
     function playBlipSound() { /* ... same using blipAudioElement.play() ... */
         if (blipAudioElement && typeof blipAudioElement.play === 'function') {
-            blipAudioElement.currentTime = 0;
+            blipAudioElement.currentTime = 1;
             blipAudioElement.play().catch(e => { /* console.warn("Audio play failed:", e.message) */ });
         }
     }
@@ -250,7 +250,7 @@
     }
 
     function updateButtonStates() { /* ... same ... */ if (!prevButton || !nextButton || !refreshButton) return; prevButton.disabled = currentDisplayIndex <= 0 || isTyping || allFetchedMemos.length === 0; nextButton.disabled = currentDisplayIndex >= allFetchedMemos.length - 1 || isTyping || allFetchedMemos.length === 0; refreshButton.disabled = isTyping; }
-    async function handleRefresh() { /* ... same ... */ if (isTyping) return; statusDiv.textContent = "🔄 Refreshing TXTCASTs..."; refreshButton.disabled = true; prevButton.disabled = true; nextButton.disabled = true; allFetchedMemos = await fetchTxtcasts(); if (allFetchedMemos.length > 0) { currentDisplayIndex = 0; typeOutMemo(currentDisplayIndex); statusDiv.textContent = `✅ ${allFetchedMemos.length} TXTCASTs loaded.`; } else { currentDisplayIndex = -1; memoDisplayDiv.textContent = "No TXTCASTs found."; if(cursorElement.parentNode === memoDisplayDiv) memoDisplayDiv.removeChild(cursorElement); statusDiv.textContent = "✅ No TXTCASTs found."; updateButtonStates(); } }
+    async function handleRefresh() { /* ... same ... */ if (isTyping) return; statusDiv.textContent = "🔄 Refreshing TXTCASTs..."; refreshButton.disabled = true; prevButton.disabled = true; nextButton.disabled = true; allFetchedMemos = await fetchTxtcasts(); if (allFetchedMemos.length > 0) { currentDisplayIndex = 0; typeOutMemo(currentDisplayIndex); statusDiv.textContent = `𝕏 ${allFetchedMemos.length} TXTCASTs loaded.`; } else { currentDisplayIndex = -1; memoDisplayDiv.textContent = "No TXTCASTs found."; if(cursorElement.parentNode === memoDisplayDiv) memoDisplayDiv.removeChild(cursorElement); statusDiv.textContent = "✅ No TXTCASTs found."; updateButtonStates(); } }
     function handlePrev() { /* ... same ... */ if (currentDisplayIndex > 0 && !isTyping) { currentDisplayIndex--; typeOutMemo(currentDisplayIndex); } }
     function handleNext() { /* ... same ... */ if (currentDisplayIndex < allFetchedMemos.length - 1 && !isTyping) { currentDisplayIndex++; typeOutMemo(currentDisplayIndex); } }
 
